@@ -38,7 +38,7 @@ public class NioServer2 {
         for (; ; ) {
 
             //没有事件发生
-            if (selector.selectNow() == 0) {
+            if (selector.select(1000) == 0) {
                 System.out.println("服务器无连接");
                 continue;
             }
@@ -57,6 +57,10 @@ public class NioServer2 {
                 if (key.isAcceptable()) {
                     //该客户端  生成一个SocketChannel
                     SocketChannel socketChannel = serverSocketChannel.accept();
+
+                    socketChannel.configureBlocking(false);
+
+                    System.out.println("客户端连接成功，生成了一个socketChannel: "+socketChannel.hashCode());
                     //将 socketChannel注册到Selector,关注事件为OP_READ
                     //同时给socketChannel关联一个buffer
                     socketChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
