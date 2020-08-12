@@ -19,7 +19,7 @@ public class GroupChatServer {
 
     private static final int PORT = 6667;
 
-    public GroupChatServer() {
+    private GroupChatServer() {
         try {
             //获取选择器
             selector = Selector.open();
@@ -57,25 +57,24 @@ public class GroupChatServer {
 
                         if (key.isAcceptable()) {
                             SocketChannel sc = listenChannel.accept();
-
                             //设置成非阻塞
                             sc.configureBlocking(false);
-
                             //监听OP_READ
                             sc.register(selector, SelectionKey.OP_READ);
 
                             System.out.println(sc.getRemoteAddress() + " 上线");
                         }
-
                         if (key.isReadable()) {
                             //通道发送read事件，即通道是可读的状态
                             readData(key);
                         }
                         iterator.remove();
                     }
+                } else {
+                    //没有事件
+                    System.out.println("没有事件");
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -122,25 +121,26 @@ public class GroupChatServer {
         }
     }
 
+    /**
+     * 给其他客户端发送消息
+     *
+     * @param msg  消息内容
+     * @param self 当前客户端自身通道
+     * @throws Exception
+     */
     private void sendInfoToOtherClients(String msg, SocketChannel self) throws Exception {
-
         System.out.println("服务器消息转发中。。。。。。");
-
         //遍历selector上所有的SelectionKey
         for (SelectionKey key : selector.keys()) {
             Channel targetChannel = key.channel();
-
             //排除自己
             if (targetChannel instanceof SocketChannel && targetChannel != self) {
                 //转型
                 SocketChannel socketChannel = (SocketChannel) targetChannel;
-
                 //将msg写入buffer
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
-
                 //将buffer的数据写入通道
                 socketChannel.write(buffer);
-
             }
         }
 

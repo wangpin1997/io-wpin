@@ -1,5 +1,7 @@
 package cn.wpin.io.nio.groupchat;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -8,6 +10,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * nio 群聊天室 客户端
@@ -16,9 +22,9 @@ import java.util.Scanner;
  */
 public class GroupChatClient {
 
-    private static String HOST = "127.0.0.1";
+    private static final String HOST = "127.0.0.1";
 
-    private static int PORT = 6667;
+    private static final int PORT = 6667;
 
     private Selector selector;
 
@@ -32,7 +38,7 @@ public class GroupChatClient {
      *
      * @throws Exception
      */
-    public GroupChatClient() throws Exception {
+    private GroupChatClient() throws Exception {
         selector = Selector.open();
         //连接服务器
         socketChannel = SocketChannel.open(new InetSocketAddress(HOST, PORT));
@@ -86,8 +92,9 @@ public class GroupChatClient {
 
     public static void main(String[] args) throws Exception {
         GroupChatClient chatClient = new GroupChatClient();
+        ExecutorService executorService = new ThreadPoolExecutor(5, 20, 10000, TimeUnit.SECONDS, new ArrayBlockingQueue<>(20), new DefaultThreadFactory("wpin-pool"));
 
-        new Thread(() -> {
+        executorService.execute(() -> {
             while (true) {
                 chatClient.readInfo();
                 try {
@@ -96,7 +103,7 @@ public class GroupChatClient {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
 
         Scanner scanner = new Scanner(System.in);
 
