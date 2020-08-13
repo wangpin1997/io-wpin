@@ -16,6 +16,8 @@ import java.nio.channels.SocketChannel;
  * linux 2.4  sendfile拷贝（真正的零拷贝），基本没有CPU拷贝  上下文切换 3次 两次次拷贝
  * <p>
  * 磁盘--->kernel buffer --->socket buffer（数据非常非常少，如length，offset忽略不计）--->目标磁盘  减少了一次上下文切换
+ *
+ * @author wangpin
  */
 public class ZeroCopy {
     //mmap跟sendfile区别
