@@ -8,6 +8,8 @@ import io.netty.util.AsciiString;
 
 /**
  * 自定义的HTTP full处理接口
+ *
+ * @author wangpin
  */
 public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
