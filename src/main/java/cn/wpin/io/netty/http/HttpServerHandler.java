@@ -11,7 +11,7 @@ import io.netty.util.AsciiString;
  *
  * @author wangpin
  */
-public class HttpHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private AsciiString asciiString = HttpHeaderValues.TEXT_PLAIN;
 

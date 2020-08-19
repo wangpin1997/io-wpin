@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.nio.charset.Charset;
+import java.util.concurrent.TimeUnit;
 
 /**
  * handler 业务处理器 netty
@@ -23,31 +24,66 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx 上下文对象，含有管道pipeline，通道channel，地址
      * @param msg 客户端发送的数据
-     * @throws Exception
      */
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        //----------------------------------
+        //最初版
         System.out.println("server ctx=" + ctx);
         //将msg转成一个  ByteBuf,ByteBuf是netty提供的，不是NIO的ByteBuffer
         ByteBuf byteBuf = (ByteBuf) msg;
         System.out.println("客户端发送的消息是：" + byteBuf.toString(Charset.defaultCharset()));
         System.out.println("客户端地址为：" + ctx.channel().remoteAddress());
-        super.channelRead(ctx, msg);
+
+        //非阻塞
+        ctx.channel().eventLoop().execute(() -> {
+            System.out.println("server ctx=" + ctx);
+            //将msg转成一个  ByteBuf,ByteBuf是netty提供的，不是NIO的ByteBuffer
+            ByteBuf byteBuf1 = (ByteBuf) msg;
+            System.out.println("客户端发送的消息是：" + byteBuf1.toString(Charset.defaultCharset()));
+            System.out.println("客户端地址为：" + ctx.channel().remoteAddress());
+        });
+
+        //定义普通任务
+        ctx.channel().eventLoop().execute(() -> {
+            try {
+                Thread.sleep(5 * 1000);
+                //writeAndFlush s write 和flush
+                //将数据写入缓存，并刷新，编码为UTF-8
+                ctx.writeAndFlush(Unpooled.copiedBuffer("hello 客户端2·", Charset.defaultCharset()));
+            } catch (InterruptedException e) {
+                System.out.println("发生异常：" + e.getMessage());
+            }
+        });
+
+        //用户自定义定时任务，该任务是提交到scheduleTaskQueue中
+        ctx.channel().eventLoop().schedule(() -> {
+            try {
+                Thread.sleep(5 * 1000);
+                //writeAndFlush s write 和flush
+                //将数据写入缓存，并刷新，编码为UTF-8
+                ctx.writeAndFlush(Unpooled.copiedBuffer("hello 客户端3·", Charset.defaultCharset()));
+            } catch (InterruptedException e) {
+                System.out.println("发生异常：" + e.getMessage());
+            }
+        }, 5, TimeUnit.SECONDS);
+
     }
 
     /**
      * 数据读取完毕
      *
      * @param ctx
-     * @throws Exception
      */
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    public void channelReadComplete(ChannelHandlerContext ctx) {
 
-        //writeAndFlush s write 和flush
-        //将数据写入缓存，并刷新，编码为UTF-8
-        ctx.writeAndFlush(Unpooled.copiedBuffer("hello 客户端·", Charset.defaultCharset()));
-        super.channelReadComplete(ctx);
+        //最简单版本
+        ctx.writeAndFlush(Unpooled.copiedBuffer("hello 客户端2·", Charset.defaultCharset()));
+
+
+
+
     }
 
     @Override
